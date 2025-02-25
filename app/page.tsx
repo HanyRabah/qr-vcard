@@ -3,8 +3,22 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 
+type Vcard = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  company: string;
+  jobTitle: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  website: string;
+}
 export default function Home() {
-  const [vcards, setVcards] = useState([]);
+  const [vcards, setVcards] = useState<Vcard[]>([]);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -19,7 +33,7 @@ export default function Home() {
     website: '',
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchVcards();
@@ -34,13 +48,13 @@ export default function Home() {
       const data = await response.json();
       setVcards(data);
     } catch (error) {
-      setError(error.message);
+      setError((error as Error).message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const response = await fetch('/api/vcards', {
@@ -69,11 +83,11 @@ export default function Home() {
         website: '',
       });
     } catch (error) {
-      setError(error.message);
+      setError((error as Error).message);
     }
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 

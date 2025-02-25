@@ -1,7 +1,9 @@
 import prisma from '@/lib/prisma';
 
-export default async function VCardPage({ params }) {
-  const { id } = params;
+type Params = Promise<{ id: string }>;
+
+export default async function VCardPage({ params }: { params: Params }) {
+  const { id } = await params;
 
   // Fetch the vCard from the database
   const vcard = await prisma.vCard.findUnique({
