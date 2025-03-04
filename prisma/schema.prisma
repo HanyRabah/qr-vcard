@@ -26,4 +26,5 @@ model VCard {
   postalCode String
   country   String
   website   String
+  profilePicture String? // Add this field for the profile picture URL
 }
