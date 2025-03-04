@@ -93,3 +93,20 @@ export async function UPDATE(request: Request) {
 
   return NextResponse.json(updatedVCard);
 }
+
+
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params;
+
+    // Convert ID to number and delete vCard
+    await prisma.vCard.delete({
+      where: { id: parseInt(id) }, // Convert ID to integer
+    });
+
+    return NextResponse.json({ message: 'vCard deleted successfully' }, { status: 200 });
+  } catch (error) {
+    console.error('Error deleting vCard:', error);
+    return NextResponse.json({ error: 'Failed to delete vCard' }, { status: 500 });
+  }
+}

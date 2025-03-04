@@ -1,6 +1,7 @@
 'use client'; 
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function VCardForm() {
   const [formData, setFormData] = useState({
@@ -18,6 +19,7 @@ export default function VCardForm() {
     profilePicture: null as File | null,
   });
 
+  const router = useRouter();
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
 
@@ -61,6 +63,7 @@ export default function VCardForm() {
 
     if (response.ok) {
       alert('vCard created successfully!');
+      router.push('/');
     } else {
       alert('Failed to create vCard.');
     }
