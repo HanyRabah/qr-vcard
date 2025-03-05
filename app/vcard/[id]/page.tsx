@@ -4,6 +4,8 @@ import { Globe, Mail, MapPin, Phone } from 'lucide-react';
 import AddToContactsButton from '@/app/components/AddToContactsButton';
 import DeleteVCardButton from '@/app/components/DeleteVCardButton';
 
+// import { notFound } from "next/navigation";
+
 export default async function VCardPage({ params }: { params: { id: string } }) {
   const { id } = params;
 

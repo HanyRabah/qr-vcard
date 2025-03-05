@@ -21,8 +21,6 @@ export default function DeleteVCardButton({ id }: { id: string }) {
 
   return (
     <div className="absolute top-4 right-4 flex space-x-4">
-      
-
       {/* Delete Button */}
       <button
         onClick={handleDelete}

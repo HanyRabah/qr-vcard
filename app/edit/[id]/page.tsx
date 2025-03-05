@@ -1,14 +1,15 @@
-"use client";
-
+"use client"; 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { X } from "lucide-react";
-
 
 export default function EditVCard() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const vCardId = searchParams.get("id");
+  const { id } = useParams();
+  const vCardId = id as string;
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -26,13 +27,27 @@ export default function EditVCard() {
   });
 
   useEffect(() => {
-    if (!vCardId) return;
+    if (!vCardId) {
+      setError("No vCard ID provided.");
+      setLoading(false);
+      return;
+    }
 
     const fetchVCard = async () => {
-      const response = await fetch(`/api/vcards/${vCardId}`);
-      if (response.ok) {
+      try {
+        const response = await fetch(`/api/vcards/${vCardId}`); 
+        if (!response.ok) throw new Error("Failed to fetch vCard");
+
         const data = await response.json();
-        setFormData({ ...data, profilePicture: null });
+        setFormData((prev) => ({
+          ...prev,
+          ...data,
+          profilePicture: null, // Reset file input
+        }));
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -53,27 +68,31 @@ export default function EditVCard() {
     if (!vCardId) return;
 
     const formDataToSend = new FormData();
-    formDataToSend.append("id", vCardId);
-    for (const key in formData) {
-      const formKey = key as keyof typeof formData;
-      if (formData[formKey] !== null) {
-        formDataToSend.append(formKey, formData[formKey] as string | Blob);
-      }
-    }
-
-    const response = await fetch("/api/vcards", {
-      method: "PUT",
-      body: formDataToSend,
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value !== null) formDataToSend.append(key, value as string | Blob);
     });
 
-    if (response.ok) {
+    try {
+      const response = await fetch(`/api/vcards/${vCardId}`, {  
+        method: "PUT",
+        body: formDataToSend,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json(); 
+        throw new Error(errorData.error || "Failed to update vCard");
+      }
+
       alert("vCard updated successfully!");
-      router.push(`/vcards/${vCardId}`);
-    } else {
-      alert("Failed to update vCard.");
+      router.push(`/vcard/${vCardId}`);
+    } catch (error) {
+      alert(error.message);
     }
   };
 
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
+  
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6 relative">
@@ -90,7 +109,7 @@ export default function EditVCard() {
           <input
             name="firstName"
             placeholder="First Name"
-            value={formData.firstName}
+            value={formData.firstName || ""}
             onChange={handleChange}
             required
             className="w-full p-2 border border-gray-300 rounded-md"
