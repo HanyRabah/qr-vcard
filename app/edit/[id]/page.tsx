@@ -1,4 +1,4 @@
-"use client"; 
+"use client";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { X } from "lucide-react";
@@ -10,6 +10,7 @@ export default function EditVCard() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -24,6 +25,7 @@ export default function EditVCard() {
     country: "",
     website: "",
     profilePicture: null as File | null,
+    existingProfilePicture: "", // Store the existing profile picture URL
   });
 
   useEffect(() => {
@@ -42,8 +44,9 @@ export default function EditVCard() {
         setFormData((prev) => ({
           ...prev,
           ...data,
-          profilePicture: null, // Reset file input
+          existingProfilePicture: data.profilePicture || "", // Store existing profile picture URL
         }));
+        setPreviewImage(data.profilePicture || null); // Set preview image if available
       } catch (error) {
         setError(error.message);
       } finally {
@@ -57,7 +60,9 @@ export default function EditVCard() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
     if (name === "profilePicture" && files) {
-      setFormData({ ...formData, [name]: files[0] });
+      const file = files[0];
+      setFormData({ ...formData, profilePicture: file });
+      setPreviewImage(URL.createObjectURL(file)); // Update preview
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -69,6 +74,7 @@ export default function EditVCard() {
 
     const formDataToSend = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
+      if (key === "existingProfilePicture") return; // Don't send existing picture URL
       if (value !== null) formDataToSend.append(key, value as string | Blob);
     });
 
@@ -104,7 +110,7 @@ export default function EditVCard() {
           >
             <X className="w-6 h-6" />
           </button>
-          </div>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             name="firstName"
@@ -194,6 +200,20 @@ export default function EditVCard() {
             required
             className="w-full p-2 border border-gray-300 rounded-md"
           />
+
+          {/* Display existing profile picture */}
+          {previewImage && (
+            <div className="flex flex-col items-center">
+              <p className="text-gray-700 text-sm">Current Profile Picture:</p>
+              <img
+                src={previewImage}
+                alt="Profile Preview"
+                className="w-32 h-32 rounded-full object-cover border border-gray-300"
+              />
+            </div>
+          )}
+
+          {/* File input for new profile picture */}
           <input
             type="file"
             name="profilePicture"
@@ -201,6 +221,7 @@ export default function EditVCard() {
             accept="image/*"
             className="w-full p-2 border border-gray-300 rounded-md"
           />
+
           <button
             type="submit"
             className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200"
@@ -208,7 +229,7 @@ export default function EditVCard() {
             Update vCard
           </button>
         </form>
-    </div>
+      </div>
     </div>
   );
 }
