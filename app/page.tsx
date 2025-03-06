@@ -2,10 +2,12 @@
 
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
+
 // import VCardForm from "VCardForm";
 
 import Link from "next/link";
-import { FiEye, FiEdit } from "react-icons/fi";
+import { FiEdit, FiEye } from "react-icons/fi";
+import { MdDelete } from "react-icons/md";
 
 type Vcard = {
   id: string;
@@ -21,10 +23,13 @@ type Vcard = {
   country: string;
   website: string;
 };
+
 export default function Home() {
   const [vcards, setVcards] = useState<Vcard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+
 
   useEffect(() => {
     fetchVcards();
@@ -42,6 +47,24 @@ export default function Home() {
       setError((error as Error).message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = (id: string) => async () => {
+    if (!confirm("Are you sure you want to delete this vCard?")) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/vcards/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete the vCard");
+      }
+      setVcards((vcards) => vcards.filter((vcard) => vcard.id !== id));
+    } catch (error) {
+      alert((error as Error).message);
     }
   };
 
@@ -82,7 +105,8 @@ export default function Home() {
                   <div>
                     <h3 className="text-lg font-semibold">{vcard.firstName} {vcard.lastName}</h3>
                     <div className="mt-2">
-                      <QRCodeSVG value={`/vcard/${vcard.id}`} size={80} className="mx-auto" />
+                      {/* add the fullink  address for the website  */}
+                      <QRCodeSVG value={`${baseUrl}/vcard/${vcard.id}`} size={80} className="mx-auto" />
                     </div>
                   </div>
 
@@ -94,6 +118,7 @@ export default function Home() {
                     <Link href={`/edit/${vcard.id}`}>
                       <FiEdit className="text-green-500 text-xl cursor-pointer hover:text-green-700" />
                     </Link>
+                      <MdDelete onClick={handleDelete(vcard.id)} className="text-red-500 text-xl cursor-pointer hover:text-red-700" />
                   </div>
                 </div>
               ))}

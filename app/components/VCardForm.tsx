@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import Cropper from 'react-easy-crop';
 import Slider from '@mui/material/Slider';
+import { useRouter } from 'next/navigation';
+import { useCallback, useState } from 'react';
+import Cropper, { Area } from 'react-easy-crop';
+import NextImage from './NextImage';
 
 export default function VCardForm() {
   const [formData, setFormData] = useState({
@@ -25,13 +26,13 @@ export default function VCardForm() {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [zoom, setZoom] = useState<number | number[] | undefined>(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area| null>(null);
 
-  const onCropChange = (crop: any) => setCrop(crop);
-  const onZoomChange = (zoom: any) => setZoom(zoom);
+  const onCropChange = (crop: {x: number, y: number}) => setCrop(crop);
+  const onZoomChange = (zoom: number| number[]) => setZoom(zoom);
 
-  const onCropComplete = useCallback((_, croppedAreaPixels) => {
+  const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
@@ -129,7 +130,7 @@ export default function VCardForm() {
       {imageSrc && (
         <>
           <div className="crop-container">
-            <Cropper image={imageSrc} crop={crop} zoom={zoom} aspect={1} cropShape="round" showGrid={false} onCropChange={onCropChange} onCropComplete={onCropComplete} onZoomChange={onZoomChange} />
+            <Cropper image={imageSrc} crop={crop} zoom={zoom as number} aspect={1} cropShape="round" showGrid={false} onCropChange={onCropChange} onCropComplete={onCropComplete} onZoomChange={onZoomChange} />
           </div>
           <div className="controls">
             <Slider value={zoom} min={1} max={3} step={0.1} onChange={(e, zoom) => onZoomChange(zoom)} />
@@ -138,7 +139,7 @@ export default function VCardForm() {
         </>
       )}
 
-      {croppedImage && <img src={croppedImage} alt="Cropped Preview" className="rounded-full w-24 h-24 mx-auto" />}
+      {croppedImage && <NextImage src={croppedImage} alt="Cropped Preview" className="rounded-full w-24 h-24 mx-auto" />}
 
       <button type="submit" className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">Add vCard</button>
     </form>

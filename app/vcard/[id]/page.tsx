@@ -1,13 +1,13 @@
-import prisma from '@/lib/prisma';
-import Image from 'next/image';
-import { Globe, Mail, MapPin, Phone } from 'lucide-react';
 import AddToContactsButton from '@/app/components/AddToContactsButton';
-import DeleteVCardButton from '@/app/components/DeleteVCardButton';
+import prisma from '@/lib/prisma';
+import { Globe, Mail, MapPin, Phone } from 'lucide-react';
+import Image from 'next/image';
 
 // import { notFound } from "next/navigation";
+type Params = Promise<{ id: string }>;
 
-export default async function VCardPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function VCardPage({ params }: { params: Params }) {
+  const { id } = await params;
 
   // Fetch the vCard from the database
   const vcard = await prisma.vCard.findUnique({
@@ -22,9 +22,6 @@ export default async function VCardPage({ params }: { params: { id: string } }) 
     <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6 relative">
         
-        {/* Top Right Icons */}
-        <DeleteVCardButton id={id.toString()} />
-
         {/* Profile Picture Section */}
         <div className="flex flex-col items-center mb-8">
           {vcard.profilePicture && (

@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
 import { X } from "lucide-react";
+import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function EditVCard() {
   const router = useRouter();
@@ -48,7 +49,11 @@ export default function EditVCard() {
         }));
         setPreviewImage(data.profilePicture || null); // Set preview image if available
       } catch (error) {
-        setError(error.message);
+        if (error instanceof Error) {
+          setError(error.message);
+        } else {
+          setError("An unknown error occurred.");
+        }
       } finally {
         setLoading(false);
       }
@@ -92,7 +97,11 @@ export default function EditVCard() {
       alert("vCard updated successfully!");
       router.push(`/vcard/${vCardId}`);
     } catch (error) {
-      alert(error.message);
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("An unknown error occurred.");
+      }
     }
   };
 
@@ -205,7 +214,7 @@ export default function EditVCard() {
           {previewImage && (
             <div className="flex flex-col items-center">
               <p className="text-gray-700 text-sm">Current Profile Picture:</p>
-              <img
+              <Image
                 src={previewImage}
                 alt="Profile Preview"
                 className="w-32 h-32 rounded-full object-cover border border-gray-300"

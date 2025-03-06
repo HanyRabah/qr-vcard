@@ -2,10 +2,12 @@ import prisma from '@/lib/prisma';
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 
+type Params = Promise<{ id: string }>;
+
 // Fetch a single vCard
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     const vCard = await prisma.vCard.findUnique({
       where: { id: parseInt(id) },
@@ -23,9 +25,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 }
 
 // Update a vCard
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     if (!id) {
       return NextResponse.json({ error: "No vCard ID provided" }, { status: 400 });
     }
@@ -66,9 +68,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 // Delete a vCard
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     await prisma.vCard.delete({
       where: { id: parseInt(id) },

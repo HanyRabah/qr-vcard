@@ -8,7 +8,7 @@ datasource db {
 }
 
 model VCard {
-  id             Int     @id @default(autoincrement())
+  id             String   @id @default(cuid())
   firstName      String
   lastName       String
   company        String
