@@ -11,7 +11,7 @@ export default async function VCardPage({ params }: { params: Params }) {
 
   // Fetch the vCard from the database
   const vcard = await prisma.vCard.findUnique({
-    where: { id: parseInt(id) },
+    where: { id: id },
   });
 
   if (!vcard) {
