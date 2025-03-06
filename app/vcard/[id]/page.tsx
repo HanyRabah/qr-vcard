@@ -1,8 +1,9 @@
 import AddToContactsButton from '@/app/components/AddToContactsButton';
 import prisma from '@/lib/prisma';
-import { Globe, Mail, MapPin, Phone } from 'lucide-react'; // Import icons from lucide-react
-import Image from 'next/image'; // For the profile picture
+import { Globe, Mail, MapPin, Phone } from 'lucide-react';
+import Image from 'next/image';
 
+// import { notFound } from "next/navigation";
 type Params = Promise<{ id: string }>;
 
 export default async function VCardPage({ params }: { params: Params }) {
@@ -19,7 +20,8 @@ export default async function VCardPage({ params }: { params: Params }) {
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
+      <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6 relative">
+        
         {/* Profile Picture Section */}
         <div className="flex flex-col items-center mb-8">
           {vcard.profilePicture && (
@@ -39,13 +41,11 @@ export default async function VCardPage({ params }: { params: Params }) {
 
         {/* Contact Details Section */}
         <div className="space-y-6">
-          {/* Phone */}
           <div className="flex items-center space-x-4">
             <Phone className="text-gray-500 w-5 h-5" />
             <span className="font-semibold">{vcard.phone}</span>
           </div>
 
-          {/* Email */}
           <div className="flex items-center space-x-4">
             <Mail className="text-gray-500 w-5 h-5" />
             <a href={`mailto:${vcard.email}`} className="font-semibold text-blue-500 hover:underline">
@@ -53,7 +53,6 @@ export default async function VCardPage({ params }: { params: Params }) {
             </a>
           </div>
 
-          {/* Website */}
           <div className="flex items-center space-x-4">
             <Globe className="text-gray-500 w-5 h-5" />
             <a href={vcard.website} className="font-semibold text-blue-500 hover:underline">
@@ -61,7 +60,6 @@ export default async function VCardPage({ params }: { params: Params }) {
             </a>
           </div>
 
-          {/* Location */}
           <div className="flex items-start space-x-4">
             <MapPin className="text-gray-500 w-5 h-5 mt-1" />
             <div className="font-semibold">

@@ -61,35 +61,3 @@ export async function GET() {
   }
 }
 
-export async function UPDATE(request: Request) {
-  const formData = await request.formData();
-  const id = parseInt(formData.get('id') as string);
-
-  const file = formData.get('profilePicture') as File;
-  let profilePictureUrl = '';
-
-  if (file) {
-    const blob = await put(`qr-pictures/${file.name}`, file, { access: 'public' });
-    profilePictureUrl = blob.url;
-  }
-
-  const updatedVCard = await prisma.vCard.update({
-    where: { id },
-    data: {
-      firstName: formData.get('firstName') as string,
-      lastName: formData.get('lastName') as string,
-      company: formData.get('company') as string,
-      jobTitle: formData.get('jobTitle') as string,
-      email: formData.get('email') as string,
-      phone: formData.get('phone') as string,
-      address: formData.get('address') as string,
-      city: formData.get('city') as string,
-      postalCode: formData.get('postalCode') as string,
-      country: formData.get('country') as string,
-      website: formData.get('website') as string,
-      profilePicture: profilePictureUrl,
-    },
-  });
-
-  return NextResponse.json(updatedVCard);
-}
