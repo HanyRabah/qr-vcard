@@ -23,20 +23,24 @@ export default async function VCardPage({ params }: { params: Params }) {
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6 relative">
         
         {/* Profile Picture Section */}
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-4">
           {vcard.profilePicture && (
-            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
+            <div className="w-40 h-40 rounded-full overflow-hidden border-white shadow-lg">
               <Image
                 src={vcard.profilePicture}
                 alt="Profile Picture"
-                width={96}
-                height={96}
+                width={180}
+                height={180}
                 className="object-cover"
               />
             </div>
           )}
           <h1 className="text-3xl font-bold mt-4">{vcard.firstName} {vcard.lastName}</h1>
           <p className="text-gray-600">{vcard.jobTitle}</p>
+        </div>
+
+        <div className="mb-8">
+          <AddToContactsButton vcard={vcard} />
         </div>
 
         {/* Contact Details Section */}
@@ -70,10 +74,6 @@ export default async function VCardPage({ params }: { params: Params }) {
           </div>
         </div>
 
-        {/* Add to Contacts Button */}
-        <div className="mt-8">
-          <AddToContactsButton vcard={vcard} />
-        </div>
       </div>
     </div>
   );
