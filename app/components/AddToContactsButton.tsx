@@ -1,4 +1,4 @@
-'use client'; // Mark this as a Client Component
+'use client'; 
 
 interface AddToContactsButtonProps {
   vcard: {
@@ -20,16 +20,16 @@ export default function AddToContactsButton({ vcard }: AddToContactsButtonProps)
   const handleClick = () => {
     // Fix the vCard formatting - proper line breaks and no extra whitespace
     const vcardData = `BEGIN:VCARD
-    VERSION:3.0
-    N:${vcard.lastName};${vcard.firstName};;;
-    FN:${vcard.firstName} ${vcard.lastName}
-    ORG:${vcard.company}
-    TITLE:${vcard.jobTitle}
-    EMAIL;type=INTERNET:${vcard.email}
-    TEL;type=CELL:${vcard.phone}
-    ADR;type=WORK:;;${vcard.address};${vcard.city};${vcard.postalCode};${vcard.country}
-    URL:${vcard.website}
-    END:VCARD`;
+VERSION:3.0
+N:${vcard.lastName};${vcard.firstName};;;
+FN:${vcard.firstName} ${vcard.lastName}
+ORG:${vcard.company}
+TITLE:${vcard.jobTitle}
+EMAIL;type=INTERNET:${vcard.email}
+TEL;type=CELL:${vcard.phone}
+ADR;type=WORK:;;${vcard.address};${vcard.city};${vcard.postalCode};${vcard.country}
+URL:${vcard.website}
+END:VCARD`;
 
     // Create the download - this approach works better on mobile
     const blob = new Blob([vcardData], { type: 'text/vcard' });
@@ -61,7 +61,7 @@ export default function AddToContactsButton({ vcard }: AddToContactsButtonProps)
   return (
     <button 
       onClick={handleClick}
-      className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+      className=" w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200"
     >
       Add to Contacts
     </button>
