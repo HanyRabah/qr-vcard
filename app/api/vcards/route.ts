@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 
 // Define the type for the vCard response
 interface VCardResponse {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   company: string;

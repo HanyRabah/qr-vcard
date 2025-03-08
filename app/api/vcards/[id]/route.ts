@@ -10,7 +10,7 @@ export async function GET(req: Request, { params }: { params: Params }) {
     const { id } = await params;
     
     const vCard = await prisma.vCard.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: id },
     });
 
     if (!vCard) {
@@ -43,7 +43,7 @@ export async function PUT(req: Request, { params }: { params: Params }) {
     }
 
     const updatedVCard = await prisma.vCard.update({
-      where: { id: parseInt(id) },
+      where: { id: id },
       data: {
         firstName: formData.get('firstName') as string,
         lastName: formData.get('lastName') as string,
@@ -73,7 +73,7 @@ export async function DELETE(req: Request, { params }: { params: Params }) {
     const { id } = await params;
 
     await prisma.vCard.delete({
-      where: { id: parseInt(id) },
+      where: { id: id },
     });
 
     return NextResponse.json({ message: 'vCard deleted successfully' });

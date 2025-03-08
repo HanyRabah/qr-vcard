@@ -1,12 +1,57 @@
 'use client';
 
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Grid from '@mui/material/Grid';
+import Modal from '@mui/material/Modal';
 import Slider from '@mui/material/Slider';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import { styled } from '@mui/material/styles';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useCallback, useState } from 'react';
-import Cropper, { Area } from 'react-easy-crop';
+import { useCallback, useEffect, useState } from 'react';
+import { Area } from 'react-easy-crop';
 import NextImage from './NextImage';
 
+// Dynamically import the Cropper component to avoid SSR issues
+const Cropper = dynamic(() => import('react-easy-crop').then((mod) => mod.default), {
+  ssr: false,
+});
+
+const modalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+};
+
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  whiteSpace: 'nowrap',
+  width: 1,
+});
+
 export default function VCardForm() {
+  // Add client-side only rendering check
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -25,12 +70,15 @@ export default function VCardForm() {
   const router = useRouter();
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
+  const [croppedImageBlob, setCroppedImageBlob] = useState<Blob | null>(null);
+  const [imageProps, setImageProps] = useState({ width: 0, height: 0 });
   const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState<number | number[] | undefined>(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area| null>(null);
-
+  const [zoom, setZoom] = useState<number>(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [open, setOpen] = useState(false);
+  
   const onCropChange = (crop: {x: number, y: number}) => setCrop(crop);
-  const onZoomChange = (zoom: number| number[]) => setZoom(zoom);
+  const onZoomChange = (newZoom: number) => setZoom(newZoom);
 
   const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -42,6 +90,7 @@ export default function VCardForm() {
       const reader = new FileReader();
       reader.onload = () => setImageSrc(reader.result as string);
       reader.readAsDataURL(file);
+      setOpen(true);
       setFormData({ ...formData, profilePicture: file });
     }
   };
@@ -77,71 +126,319 @@ export default function VCardForm() {
     croppedCtx.arc(width / 2, height / 2, width / 2, 0, Math.PI * 2);
     croppedCtx.clip();
     croppedCtx.drawImage(canvas, 0, 0);
-
-    setCroppedImage(croppedCanvas.toDataURL());
+    
+    // Convert to blob and store it
+    const croppedDataUrl = croppedCanvas.toDataURL('image/png');
+    
+    try {
+      // Create blob from data URL
+      const blob = await fetch(croppedDataUrl).then(res => res.blob());
+      setCroppedImageBlob(blob);
+      setCroppedImage(croppedDataUrl);
+      setImageProps({ width, height });
+      setOpen(false);
+    } catch (error) {
+      console.error('Error creating image blob:', error);
+      setOpen(false);
+    }
   };
+  
+  const handleClose = () => setOpen(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createCroppedImage();
-
+    
+    // Create FormData object
     const formDataToSend = new FormData();
+    
+    // Add all text fields
     for (const key in formData) {
       const formKey = key as keyof typeof formData;
-      if (formData[formKey] !== null) {
-        formDataToSend.append(formKey, formData[formKey] as string | Blob);
+      if (formKey !== 'profilePicture' && formData[formKey] !== null) {
+        formDataToSend.append(formKey, formData[formKey] as string);
       }
     }
 
-    if (croppedImage) {
-      const blob = await fetch(croppedImage).then((res) => res.blob());
-      formDataToSend.append('profilePicture', blob, 'cropped-image.png');
+    // Add the cropped image if available, otherwise use the original
+    if (croppedImageBlob) {
+      formDataToSend.append('profilePicture', croppedImageBlob, 'profile-picture.png');
+    } else if (formData.profilePicture) {
+      formDataToSend.append('profilePicture', formData.profilePicture);
     }
 
-    const response = await fetch('/api/vcards', {
-      method: 'POST',
-      body: formDataToSend,
-    });
+    try {
+      const response = await fetch('/api/vcards', {
+        method: 'POST',
+        body: formDataToSend,
+      });
 
-    if (response.ok) {
-      alert('vCard created successfully!');
-      router.push('/');
-    } else {
-      alert('Failed to create vCard.');
+      if (response.ok) {
+        alert('vCard created successfully!');
+        router.push('/');
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to create vCard' }));
+        alert(errorData.message || 'Failed to create vCard.');
+      }
+    } catch (error) {
+      console.error('Error creating vCard:', error);
+      alert('An error occurred while creating the vCard.');
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // Return null during SSR to prevent hydration issues
+  if (!isClient) {
+    return null;
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <input name="firstName" placeholder="First Name" onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} required className="w-full p-2 border border-gray-300 rounded-md" />
-      <input name="lastName" placeholder="Last Name" onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} required className="w-full p-2 border border-gray-300 rounded-md" />
-      <input name="company" placeholder="Company" onChange={(e) => setFormData({ ...formData, company: e.target.value })} required className="w-full p-2 border border-gray-300 rounded-md" />
-      <input name="jobTitle" placeholder="Job Title" onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })} required className="w-full p-2 border border-gray-300 rounded-md" />
-      <input name="email" placeholder="Email" type="email" onChange={(e) => setFormData({ ...formData, email: e.target.value })} required className="w-full p-2 border border-gray-300 rounded-md" />
-      <input name="phone" placeholder="Phone" onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required className="w-full p-2 border border-gray-300 rounded-md" />
-      <input name="address" placeholder="Address" onChange={(e) => setFormData({ ...formData, address: e.target.value })} required className="w-full p-2 border border-gray-300 rounded-md" />
-      <input name="city" placeholder="City" onChange={(e) => setFormData({ ...formData, city: e.target.value })} required className="w-full p-2 border border-gray-300 rounded-md" />
-      <input name="postalCode" placeholder="Postal Code" onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} required className="w-full p-2 border border-gray-300 rounded-md" />
-      <input name="country" placeholder="Country" onChange={(e) => setFormData({ ...formData, country: e.target.value })} required className="w-full p-2 border border-gray-300 rounded-md" />
-      <input name="website" placeholder="Website" onChange={(e) => setFormData({ ...formData, website: e.target.value })} required className="w-full p-2 border border-gray-300 rounded-md" />
+    <Box component="div" sx={{ mx: 'auto', maxWidth: 'md', px: 2 }}>
+      <Box component="form" onSubmit={handleSubmit} sx={{ mt: 4 }}>
+        <Stack spacing={3}>
+          <Box>
+            <Typography variant="subtitle1" component="div">
+              Profile Picture
+            </Typography>
+            <Stack spacing={1}>
+              <Button
+                variant="outlined"
+                component="label"
+                sx={{ mt: 1 }}
+              >
+                Upload Image
+                <VisuallyHiddenInput
+                  type="file"
+                  name="profilePicture"
+                  id="profilePicture"
+                  onChange={handleImageUpload}
+                  accept="image/*"
+                />
+              </Button>
+              <Typography variant="caption" color="text.secondary">
+                Click to upload a profile picture
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Supported formats: JPG, PNG, GIF
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Max file size: 5MB
+              </Typography>
+            </Stack>
+          </Box>
 
-      <input type="file" name="profilePicture" onChange={handleImageUpload} accept="image/*" className="w-full p-2 border border-gray-300 rounded-md" />
+          <Modal
+            open={open}
+            onClose={handleClose}
+            aria-labelledby="crop-modal-title"
+          >
+            <Box sx={modalStyle}>
+              <Box sx={{ height: '250px', position: 'relative', mb: 2 }}>
+                {imageSrc && (
+                  <Cropper
+                    image={imageSrc}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={1}
+                    cropShape="round"
+                    showGrid={false}
+                    onCropChange={onCropChange}
+                    onCropComplete={onCropComplete}
+                    onZoomChange={onZoomChange}
+                    rotation={0}
+                    minZoom={1}
+                    maxZoom={3}
+                    zoomSpeed={0.1}
+                    restrictPosition={false}
+                    initialCroppedAreaPixels={undefined}
+                    onInteractionStart={() => {}}
+                    onInteractionEnd={() => {}}
+                    style={{ containerStyle: {}, mediaStyle: {}, cropAreaStyle: {} }}
+                    classes={{ containerClassName: '', mediaClassName: '', cropAreaClassName: '' }}
+                    mediaProps={{}}
+                    keyboardStep={0.1}
+                  />
+                )}
+              </Box>
+              <Box sx={{ mb: 2 }}>
+                <Slider 
+                  value={zoom} 
+                  min={1} 
+                  max={3} 
+                  step={0.1} 
+                  onChange={(_, newValue) => onZoomChange(newValue as number)} 
+                />
+              </Box>
+              <Button 
+                variant="contained" 
+                color="primary" 
+                onClick={createCroppedImage}
+              >
+                Crop Image
+              </Button>
+            </Box>
+          </Modal>
 
-      {imageSrc && (
-        <>
-          <div className="crop-container">
-            <Cropper image={imageSrc} crop={crop} zoom={zoom as number} aspect={1} cropShape="round" showGrid={false} onCropChange={onCropChange} onCropComplete={onCropComplete} onZoomChange={onZoomChange} />
-          </div>
-          <div className="controls">
-            <Slider value={zoom} min={1} max={3} step={0.1} onChange={(e, zoom) => onZoomChange(zoom)} />
-          </div>
-          <button type="button" onClick={createCroppedImage} className="bg-green-500 text-white px-4 py-2 rounded-md">Crop Image</button>
-        </>
-      )}
+          {croppedImage && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 2 }}>
+              <Box
+                sx={{
+                  width: '96px',
+                  height: '96px',
+                  borderRadius: '50%',
+                  overflow: 'hidden'
+                }}
+              >
+                <NextImage 
+                  src={croppedImage} 
+                  width={imageProps.width} 
+                  height={imageProps.height} 
+                  alt="Cropped Preview" 
+                />
+              </Box>
+            </Box>
+          )}
 
-      {croppedImage && <NextImage src={croppedImage} alt="Cropped Preview" className="rounded-full w-24 h-24 mx-auto" />}
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                name="firstName"
+                label="First Name"
+                value={formData.firstName}
+                onChange={handleChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                name="lastName"
+                label="Last Name"
+                value={formData.lastName}
+                onChange={handleChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                name="company"
+                label="Company"
+                value={formData.company}
+                onChange={handleChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                name="jobTitle"
+                label="Job Title"
+                value={formData.jobTitle}
+                onChange={handleChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                name="email"
+                label="Email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                name="phone"
+                label="Phone"
+                value={formData.phone}
+                onChange={handleChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                name="address"
+                label="Address"
+                value={formData.address}
+                onChange={handleChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                name="city"
+                label="City"
+                value={formData.city}
+                onChange={handleChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                name="postalCode"
+                label="Postal Code"
+                value={formData.postalCode}
+                onChange={handleChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                name="country"
+                label="Country"
+                value={formData.country}
+                onChange={handleChange}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                required
+                name="website"
+                label="Website"
+                value={formData.website}
+                onChange={handleChange}
+                variant="outlined"
+              />
+            </Grid>
+          </Grid>
 
-      <button type="submit" className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">Add vCard</button>
-    </form>
+          <Button 
+            type="submit" 
+            variant="contained" 
+            color="primary" 
+            fullWidth 
+            size="large"
+            sx={{ mt: 3 }}
+          >
+            Add vCard
+          </Button>
+        </Stack>
+      </Box>
+    </Box>
   );
 }
