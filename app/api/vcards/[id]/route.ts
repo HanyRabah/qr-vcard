@@ -19,7 +19,7 @@ export async function GET(req: Request, { params }: { params: Params }) {
 
     return NextResponse.json(vCard);
   } catch (error) {
-    console.error('Error fetching vCard:', error);
+    console.error('Error fetching vCard:', error.stack);
     return NextResponse.json({ error: 'Failed to fetch vCard' }, { status: 500 });
   }
 }
