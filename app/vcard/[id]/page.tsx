@@ -1,3 +1,6 @@
+// "use client";
+// import { useRouter } from 'next/router';
+
 import AddToContactsButton from '@/app/components/AddToContactsButton';
 import prisma from '@/lib/prisma';
 import { Globe, Mail, MapPin, Phone } from 'lucide-react';
@@ -7,6 +10,7 @@ import Image from 'next/image';
 type Params = Promise<{ id: string }>;
 
 export default async function VCardPage({ params }: { params: Params }) {
+  // const router = useRouter();
   const { id } = await params;
 
   // Fetch the vCard from the database
@@ -21,6 +25,13 @@ export default async function VCardPage({ params }: { params: Params }) {
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6 relative">
+        
+      {/* <button 
+          onClick={() => router.push('/')} 
+          className="absolute top-4 right-4 p-2 text-gray-600 hover:text-gray-800"
+        >
+          <X className="w-6 h-6" />
+        </button> */}
         
         {/* Profile Picture Section */}
         <div className="flex flex-col items-center mb-4">
@@ -47,7 +58,10 @@ export default async function VCardPage({ params }: { params: Params }) {
         <div className="space-y-6">
           <div className="flex items-center space-x-4">
             <Phone className="text-gray-500 w-5 h-5" />
-            <span className="font-semibold">{vcard.phone}</span>
+            {/* <span className="font-semibold">{vcard.phone}</span> */}
+            <a href={`tel:${vcard.phone}`} className="font-semibold text-blue-500 hover:underline">
+            {vcard.phone}
+            </a>
           </div>
 
           <div className="flex items-center space-x-4">

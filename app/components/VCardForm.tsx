@@ -260,6 +260,7 @@ export default function VCardForm() {
                     classes={{ containerClassName: '', mediaClassName: '', cropAreaClassName: '' }}
                     mediaProps={{}}
                     keyboardStep={0.1}
+                    cropperProps={{}}
                   />
                 )}
               </Box>
