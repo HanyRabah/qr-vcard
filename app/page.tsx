@@ -70,14 +70,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
-      {/* <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8">vCard Generator</h1>
-
-        
-        <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Add New vCard</h2>
-          <VCardForm  />
-        </div> */}
 
       <div className="max-w-6xl mx-auto">
         {/* Header */}
