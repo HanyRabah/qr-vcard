@@ -14,30 +14,33 @@
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  /* font-family: Arial, Helvetica, sans-serif; */
-  font-weight: 400; 
-  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
+/* Android-optimized styles */
 @layer base {
   body {
-    font-family: var(--font-roboto), -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    @apply bg-background text-foreground;
+    font-family: var(--font-roboto), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+    -webkit-font-smoothing: subpixel-antialiased; /* Better for Android */
+    -moz-osx-font-smoothing: auto;
   }
-  
-  /* Keep Geist fonts for specific elements if needed */
-  .geist-sans {
-    font-family: var(--font-geist-sans);
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-roboto);
+    line-height: 1.2;
+    margin: 0.75em 0;
   }
-  
-  .geist-mono {
-    font-family: var(--font-geist-mono);
+  a {
+    color: #171717 !important;
+    text-decoration: none;
+    transition: .3s ease-in-out;
+  }
+  a:hover {
+    color: #02FFC3 !important;
   }
 }
+
+
 .add-cont-btn {
   background-color: #02FFC3;
   color: #171717;
