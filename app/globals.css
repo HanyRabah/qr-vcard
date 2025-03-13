@@ -34,6 +34,9 @@
   p {
     color :#171717;
   }
+  input::placeholder {
+    color: #888888;
+  }
   a {
     color: #171717 !important;
     text-decoration: none;

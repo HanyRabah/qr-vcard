@@ -217,6 +217,8 @@ export default function EditVCard() {
               <Image
                 src={previewImage}
                 alt="Profile Preview"
+                width={128}  // Adjust size as needed
+                height={128} 
                 className="w-32 h-32 rounded-full object-cover border border-gray-300"
               />
             </div>
